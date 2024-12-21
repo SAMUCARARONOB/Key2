@@ -231,7 +231,7 @@ local function createSpecialBlock(character)
     block.Color = Color3.fromRGB(0, 0, 0)  -- Cor preta
     block.Parent = workspace
 
-    local spikes = Instance.new("SpecialMesh", block)
+    rbxassetid://6417179625local spikes = Instance.new("SpecialMesh", block)
     spikes.MeshType = Enum.MeshType.FileMesh
     spikes.MeshId = "rbxassetid://10470609"  -- ID de mesh de espinhos (substitua pelo que preferir)
     spikes.Scale = Vector3.new(4, 4, 4)
@@ -320,9 +320,9 @@ local function playProximitySounds(block, character)
     runService.Heartbeat:Connect(function()
         if block and character and character.HumanoidRootPart then
             local distance = (block.Position - character.HumanoidRootPart.Position).Magnitude
-            if distance <= 40 then  -- Ajuste a distância conforme necessário
-                proximitySound1.Volume = 1 / (distance / 30)
-                proximitySound2.Volume = 1 / (distance / 30)
+            if distance <= 10 then  -- Ajuste a distância conforme necessário
+                proximitySound1.Volume = 1 / (distance / 5)
+                proximitySound2.Volume = 1 / (distance / 5)
             else
                 proximitySound1.Volume = 0
                 proximitySound2.Volume = 0
@@ -332,16 +332,30 @@ local function playProximitySounds(block, character)
 end
 
 -- Sons aleatórios
-local randomSound1Id = "rbxassetid://1572549161"
-local randomSound4Id = "rbxassetid://2101658119"
+local randomSounds = {
+    "rbxassetid://1572549161",
+    "rbxassetid://9102212500",
+    "http://www.roblox.com/asset/?id=133116870",
+    "rbxassetid://1494557038",
+    "rbxassetid://284938313",
+    "rbxassetid://5681392074"
+}
+
 spawn(function()
     while true do
-        local soundChoice = math.random(1, 4)
+        local soundChoice = math.random(1, #randomSounds)
         local sound = Instance.new("Sound")
-        sound.SoundId = soundChoice == 1 and randomSound1Id or randomSound4Id
+        sound.SoundId = randomSounds[soundChoice]
         sound.Volume = 1
         sound.Parent = workspace
         sound:Play()
-        wait(math.random(0, 30))  -- Espera entre 0 e 30 segundos para tocar o próximo som aleatório
+
+        if soundChoice == #randomSounds then  -- Se for o último som (rbxassetid://5681392074), repete por 30 segundos
+            delay(60, function()
+                sound.Looped = false
+            end)
+        end
+
+        wait(math.random(0, 10))  -- Espera entre 0 e 60 segundos para tocar o próximo som aleatório
     end
 end)
