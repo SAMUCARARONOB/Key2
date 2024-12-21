@@ -8,18 +8,16 @@ local random = Random.new()
 
 local lavaParts = {}
 local soundId = "http://www.roblox.com/asset/?id=96481249"
-local meteorSoundId = "rbxasset://sounds/action_falling.ogg"
-local lightningSoundId = "http://www.roblox.com/asset/?id=96478505"
 local specialBlock = nil
 
 local function createApocalypticFog()
-    lighting.FogEnd = 200
+    lighting.FogEnd = 150
     lighting.FogColor = Color3.fromRGB(255, 102, 0) -- Névoa laranja para um efeito apocalíptico
     lighting.Brightness = 0.5
 end
 
 local function createRedFog()
-    lighting.FogEnd = 200
+    lighting.FogEnd = 100
     lighting.FogColor = Color3.fromRGB(255, 0, 0) -- Névoa vermelha
     lighting.Brightness = 0.5
 end
@@ -44,12 +42,6 @@ local function spawnMeteor()
     fireParticle.Parent = meteor
     fireParticle.Enabled = true
 
-    local sound = Instance.new("Sound")
-    sound.SoundId = meteorSoundId
-    sound.Volume = 1
-    sound.Parent = meteor
-    sound:Play()
-
     meteor.Touched:Connect(function(hit)
         if hit:IsA("BasePart") and hit ~= character.HumanoidRootPart then
             local explosion = Instance.new("Explosion")
@@ -59,11 +51,6 @@ local function spawnMeteor()
             explosion.Parent = workspace
             meteor:Destroy()
         end
-    end)
-
-    runService.Heartbeat:Connect(function()
-        local distance = (meteor.Position - character.HumanoidRootPart.Position).Magnitude
-        sound.Volume = math.clamp(1 / (distance / 50), 0, 1)
     end)
 end
 
@@ -167,12 +154,6 @@ local function spawnLightning()
         lightning.Position = Vector3.new(random:NextNumber(-500, 500), 50, random:NextNumber(-500, 500))
         lightning.Material = Enum.Material.Neon
         lightning.Parent = workspace
-
-        local sound = Instance.new("Sound")
-        sound.SoundId = lightningSoundId
-        sound.Volume = 1
-        sound.Parent = lightning
-        sound:Play()
         
         local explosion = Instance.new("Explosion")
         explosion.Position = lightning.Position
@@ -197,11 +178,6 @@ local function spawnLightning()
                     character.HumanoidRootPart.Velocity = (character.HumanoidRootPart.Position - lightning.Position).unit * 50
                 end
             end
-        end)
-
-        runService.Heartbeat:Connect(function()
-            local distance = (lightning.Position - character.HumanoidRootPart.Position).Magnitude
-            sound.Volume = math.clamp(1 / (distance / 50), 0, 1)
         end)
     end
 end
@@ -276,6 +252,14 @@ local function followPlayer(block, character)
             -- Verifica colisão com o jogador
             if (block.Position - character.HumanoidRootPart.Position).Magnitude <= 5 then
                 character.Humanoid:TakeDamage(character.Humanoid.MaxHealth)
+
+                -- Som ao matar o jogador
+                local deathSound = Instance.new("Sound")
+                deathSound.SoundId = "rbxassetid://3713806665"
+                deathSound.Volume = 1
+                deathSound.Parent = workspace
+                deathSound:Play()
+
                 connection:Disconnect()  -- Para de seguir o jogador
                 wait(5)
                 followPlayer(block, character)  -- Retoma a perseguição após 5 segundos
@@ -293,6 +277,7 @@ local function onCharacterRespawn()
         -- Criar um novo bloco e seguir o jogador novamente
         specialBlock = createSpecialBlock(character)
         followPlayer(specialBlock, character)
+        playProximitySounds(specialBlock, character)  -- Adicionando a chamada para os sons de proximidade
     end
 end
 
@@ -300,6 +285,7 @@ end
 delay(5, function()
     specialBlock = createSpecialBlock(character)
     followPlayer(specialBlock, character)
+    playProximitySounds(specialBlock, character)  -- Adicionando a chamada para os sons de proximidade
 end)
 
 -- Detecta quando o jogador respawna
@@ -307,4 +293,55 @@ character.Humanoid.Died:Connect(function()
     player.CharacterAdded:Wait()
     character = player.Character or player.CharacterAdded:Wait()
     onCharacterRespawn()
+end)
+
+-- Adicionando sons de proximidade para o bloco especial
+local proximitySound1Id = "rbxassetid://2101658119"
+local proximitySound2Id = "rbxassetid://362990415"
+local proximitySound1 = nil
+local proximitySound2 = nil
+
+local function playProximitySounds(block, character)
+    proximitySound1 = Instance.new("Sound")
+    proximitySound1.SoundId = proximitySound1Id
+    proximitySound1.Volume = 1
+    proximitySound1.Looped = true
+    proximitySound1.Parent = block
+
+    proximitySound2 = Instance.new("Sound")
+    proximitySound2.SoundId = proximitySound2Id
+    proximitySound2.Volume = 1
+    proximitySound2.Looped = true
+    proximitySound2.Parent = block
+
+    proximitySound1:Play()
+    proximitySound2:Play()
+
+    runService.Heartbeat:Connect(function()
+        if block and character and character.HumanoidRootPart then
+            local distance = (block.Position - character.HumanoidRootPart.Position).Magnitude
+            if distance <= 40 then  -- Ajuste a distância conforme necessário
+                proximitySound1.Volume = 1 / (distance / 30)
+                proximitySound2.Volume = 1 / (distance / 30)
+            else
+                proximitySound1.Volume = 0
+                proximitySound2.Volume = 0
+            end
+        end
+    end)
+end
+
+-- Sons aleatórios
+local randomSound1Id = "rbxassetid://1572549161"
+local randomSound4Id = "rbxassetid://2101658119"
+spawn(function()
+    while true do
+        local soundChoice = math.random(1, 4)
+        local sound = Instance.new("Sound")
+        sound.SoundId = soundChoice == 1 and randomSound1Id or randomSound4Id
+        sound.Volume = 1
+        sound.Parent = workspace
+        sound:Play()
+        wait(math.random(0, 30))  -- Espera entre 0 e 30 segundos para tocar o próximo som aleatório
+    end
 end)
