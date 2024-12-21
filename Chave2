@@ -7,7 +7,9 @@ local debris = game:GetService("Debris")
 local random = Random.new()
 
 local lavaParts = {}
-local soundId = "rbxassetid://1835345332"
+local soundId = "http://www.roblox.com/asset/?id=96481249"
+local meteorSoundId = "rbxasset://sounds/action_falling.ogg"
+local lightningSoundId = "http://www.roblox.com/asset/?id=96478505"
 local specialBlock = nil
 
 local function createApocalypticFog()
@@ -42,6 +44,12 @@ local function spawnMeteor()
     fireParticle.Parent = meteor
     fireParticle.Enabled = true
 
+    local sound = Instance.new("Sound")
+    sound.SoundId = meteorSoundId
+    sound.Volume = 1
+    sound.Parent = meteor
+    sound:Play()
+
     meteor.Touched:Connect(function(hit)
         if hit:IsA("BasePart") and hit ~= character.HumanoidRootPart then
             local explosion = Instance.new("Explosion")
@@ -51,6 +59,11 @@ local function spawnMeteor()
             explosion.Parent = workspace
             meteor:Destroy()
         end
+    end)
+
+    runService.Heartbeat:Connect(function()
+        local distance = (meteor.Position - character.HumanoidRootPart.Position).Magnitude
+        sound.Volume = math.clamp(1 / (distance / 50), 0, 1)
     end)
 end
 
@@ -154,6 +167,12 @@ local function spawnLightning()
         lightning.Position = Vector3.new(random:NextNumber(-500, 500), 50, random:NextNumber(-500, 500))
         lightning.Material = Enum.Material.Neon
         lightning.Parent = workspace
+
+        local sound = Instance.new("Sound")
+        sound.SoundId = lightningSoundId
+        sound.Volume = 1
+        sound.Parent = lightning
+        sound:Play()
         
         local explosion = Instance.new("Explosion")
         explosion.Position = lightning.Position
@@ -178,6 +197,11 @@ local function spawnLightning()
                     character.HumanoidRootPart.Velocity = (character.HumanoidRootPart.Position - lightning.Position).unit * 50
                 end
             end
+        end)
+
+        runService.Heartbeat:Connect(function()
+            local distance = (lightning.Position - character.HumanoidRootPart.Position).Magnitude
+            sound.Volume = math.clamp(1 / (distance / 50), 0, 1)
         end)
     end
 end
