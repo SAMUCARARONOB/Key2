@@ -11,13 +11,13 @@ local soundId = "http://www.roblox.com/asset/?id=96481249"
 local specialBlock = nil
 
 local function createApocalypticFog()
-    lighting.FogEnd = 200
+    lighting.FogEnd = 150
     lighting.FogColor = Color3.fromRGB(255, 102, 0) -- Névoa laranja para um efeito apocalíptico
     lighting.Brightness = 0.5
 end
 
 local function createRedFog()
-    lighting.FogEnd = 200
+    lighting.FogEnd = 150
     lighting.FogColor = Color3.fromRGB(255, 0, 0) -- Névoa vermelha
     lighting.Brightness = 0.5
 end
