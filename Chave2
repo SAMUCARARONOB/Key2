@@ -3,11 +3,11 @@ local character = player.Character or player.CharacterAdded:Wait()
 local runService = game:GetService("RunService")
 local workspace = game:GetService("Workspace")
 local lighting = game:GetService("Lighting")
-local players = game:GetService("Players")
 local debris = game:GetService("Debris")
 local random = Random.new()
 
 local lavaParts = {}
+local soundId = "rbxassetid://1835345332"
 
 local function createApocalypticFog()
     lighting.FogEnd = 200
@@ -22,7 +22,7 @@ local function createRedFog()
 end
 
 local function resetFog()
-    lighting.FogEnd = 200
+    lighting.FogEnd = 150
     lighting.FogColor = Color3.fromRGB(255, 102, 0) -- Névoa laranja
     lighting.Brightness = 0.5
 end
@@ -53,11 +53,17 @@ local function spawnMeteor()
     end)
 end
 
-local function playScarySound()
+local function playSound()
     local sound = Instance.new("Sound")
-    sound.SoundId = "rbxassetid://183763515" -- ID de som assustador, substitua pelo que preferir
+    sound.SoundId = soundId
     sound.Volume = 1
     sound.Parent = workspace
+
+    sound.Ended:Connect(function()
+        wait(0.001)
+        playSound()
+    end)
+
     sound:Play()
 end
 
@@ -73,7 +79,6 @@ end
 local function createDustEffect()
     -- Efeito de poeira
     local dustParticle = Instance.new("ParticleEmitter")
-    dustParticle.Texture = "rbxassetid://241876004" -- Substitua com a textura de poeira desejada
     dustParticle.Rate = 100
     dustParticle.Lifetime = NumberRange.new(5)
     dustParticle.Speed = NumberRange.new(5)
@@ -140,7 +145,7 @@ end
 
 local function spawnLightning()
     local lightning = Instance.new("Part")
-    lightning.Size = Vector3.new(0.5, 100, 0.5) -- Aumenta a altura do raio
+    lightning.Size = Vector3.new(0.5, 500, 0.5) -- Aumenta a altura do raio
     lightning.Color = Color3.fromRGB(255, 255, 255)
     lightning.Anchored = true
     lightning.CanCollide = false
@@ -162,7 +167,7 @@ local function spawnLightning()
 
     lightning.Touched:Connect(function(hit)
         if hit.Parent == character then
-            if random:NextNumber(0, 1) <= 0.2 then -- 20% de chance de acertar o personagem
+            if random:NextNumber(0, 1) <= 0.5 then -- 50% de chance de acertar o personagem
                 character.Humanoid:TakeDamage(99)
                 createRedFog()
                 delay(3, resetFog) -- Restaura a névoa após 3 segundos
@@ -174,14 +179,44 @@ local function spawnLightning()
     end)
 end
 
+local function createStrangeImages()
+    local skybox = Instance.new("Sky")
+    skybox.SkyboxBk = "rbxassetid://12345678"  -- Substitua com as imagens desejadas
+    skybox.SkyboxDn = "rbxassetid://12345678"
+    skybox.SkyboxFt = "rbxassetid://12345678"
+    skybox.SkyboxLf = "rbxassetid://12345678"
+    skybox.SkyboxRt = "rbxassetid://12345678"
+    skybox.SkyboxUp = "rbxassetid://12345678"
+    skybox.Parent = lighting
+end
+
+local function createSmokeEffect()
+    local smoke = Instance.new("Part")
+    smoke.Size = Vector3.new(5, 5, 5)
+    smoke.Position = character.Head.Position
+    smoke.Anchored = false
+    smoke.CanCollide = false
+    smoke.Color = Color3.fromRGB(0, 0, 0)
+    smoke.Transparency = 0.8
+    smoke.Parent = character.Head
+
+    local smokeParticle = Instance.new("ParticleEmitter")
+    smokeParticle.Texture = "rbxassetid://241876004" -- Textura de fumaça
+    smokeParticle.Rate = 50
+    smokeParticle.Lifetime = NumberRange.new(5)
+    smokeParticle.Speed = NumberRange.new(1)
+    smokeParticle.Parent = smoke
+end
+
 local function apocalypticEffects()
     spawnMeteor()
-    playScarySound()
     createApocalypticFog()
     createBloomEffect()
     createDustEffect()
     applyRedSky()  -- Aplica o céu vermelho continuamente
     createLavaPool()
+    createStrangeImages()
+    createSmokeEffect()
 end
 
 runService.RenderStepped:Connect(function()
@@ -190,12 +225,14 @@ end)
 
 runService.Heartbeat:Connect(function()
     spawnLightning()
-    wait(0.001)  -- Intervalo de tempo de 0.1 segundos para raios
+    wait(0.00001)  -- Intervalo de tempo de 0.1 segundos para raios
 end)
 
 spawn(function()
     while true do
         createLavaPool()
-        wait(5)  -- Intervalo de tempo de 0.5 segundos para adicionar novas piscinas de lava
+        wait(5)  -- Intervalo de tempo de 5 segundos para adicionar novas piscinas de lava
     end
 end)
+
+playSound(0.001)
