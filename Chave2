@@ -8,6 +8,7 @@ local random = Random.new()
 
 local lavaParts = {}
 local soundId = "rbxassetid://1835345332"
+local specialBlock = nil
 
 local function createApocalypticFog()
     lighting.FogEnd = 200
@@ -200,7 +201,6 @@ local function apocalypticEffects()
     applyRedSky()  -- Aplica o céu vermelho continuamente
     createLavaPool()
     createStrangeImages()
-    createSmokeEffect()
 end
 
 runService.RenderStepped:Connect(function()
@@ -220,3 +220,67 @@ spawn(function()
 end)
 
 playSound()
+
+-- Adicionando a criação do bloco especial que segue o jogador
+local function createSpecialBlock(character)
+    local block = Instance.new("Part")
+    block.Size = Vector3.new(4, 4, 4)  -- Tamanho do bloco
+    block.Anchored = false
+    block.CanCollide = false
+    block.Position = character.HumanoidRootPart.Position + Vector3.new(10, 4, 0)  -- Perto do jogador
+    block.Color = Color3.fromRGB(0, 0, 0)  -- Cor preta
+    block.Parent = workspace
+
+    local spikes = Instance.new("SpecialMesh", block)
+    spikes.MeshType = Enum.MeshType.FileMesh
+    spikes.MeshId = "rbxassetid://10470609"  -- ID de mesh de espinhos (substitua pelo que preferir)
+    spikes.Scale = Vector3.new(4, 4, 4)
+
+    local bodyVelocity = Instance.new("BodyVelocity", block)
+    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+
+    return block
+end
+
+local function followPlayer(block, character)
+    local connection
+    connection = runService.Heartbeat:Connect(function()
+        if block and character and character.HumanoidRootPart then
+            local direction = (character.HumanoidRootPart.Position - block.Position).unit
+            block.Velocity = direction * 15
+
+            -- Verifica colisão com o jogador
+            if (block.Position - character.HumanoidRootPart.Position).Magnitude <= 5 then
+                character.Humanoid:TakeDamage(character.Humanoid.MaxHealth)
+                connection:Disconnect()  -- Para de seguir o jogador
+                wait(5)
+                followPlayer(block, character)  -- Retoma a perseguição após 5 segundos
+            end
+        end
+    end)
+end
+
+local function onCharacterRespawn()
+    if specialBlock then
+        -- Parar o bloco atual
+        specialBlock:Destroy()
+        wait(5)
+
+        -- Criar um novo bloco e seguir o jogador novamente
+        specialBlock = createSpecialBlock(character)
+        followPlayer(specialBlock, character)
+    end
+end
+
+-- Após 5 segundos, crie e siga o jogador
+delay(5, function()
+    specialBlock = createSpecialBlock(character)
+    followPlayer(specialBlock, character)
+end)
+
+-- Detecta quando o jogador respawna
+character.Humanoid.Died:Connect(function()
+    player.CharacterAdded:Wait()
+    character = player.Character or player.CharacterAdded:Wait()
+    onCharacterRespawn()
+end)
