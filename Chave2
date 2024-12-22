@@ -10,14 +10,33 @@ local lavaParts = {}
 local soundId = "http://www.roblox.com/asset/?id=96481249"
 local specialBlock = nil
 
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local warningImage = Instance.new("ImageLabel")
+warningImage.Size = UDim2.new(1, 0, 1, 0)
+warningImage.Position = UDim2.new(0, 0, 0, 0)
+warningImage.Image = "http://www.roblox.com/asset/?id=13928716599"
+warningImage.BackgroundTransparency = 1
+warningImage.Visible = false
+warningImage.Parent = gui
+
+local deathImage = Instance.new("ImageLabel")
+deathImage.Size = UDim2.new(1, 0, 1, 0)
+deathImage.Position = UDim2.new(0, 0, 0, 0)
+deathImage.Image = "rbxthumb://type=GameIcon&id=5929152156&w=128&h=128"
+deathImage.BackgroundTransparency = 1
+deathImage.Visible = false
+deathImage.Parent = gui
+
 local function createApocalypticFog()
-    lighting.FogEnd = 130
+    lighting.FogEnd = 150
     lighting.FogColor = Color3.fromRGB(255, 102, 0) -- Névoa laranja para um efeito apocalíptico
     lighting.Brightness = 0.5
 end
 
 local function createRedFog()
-    lighting.FogEnd = 100
+    lighting.FogEnd = 150
     lighting.FogColor = Color3.fromRGB(255, 0, 0) -- Névoa vermelha
     lighting.Brightness = 0.5
 end
@@ -139,7 +158,7 @@ local function createLavaPool()
     lava.Touched:Connect(function(hit)
         local humanoid = hit.Parent:FindFirstChild("Humanoid")
         if humanoid and lava.Color == Color3.fromRGB(255, 69, 0) then
-            humanoid:TakeDamage(25)
+            humanoid:TakeDamage(5)
         end
     end)
 end
@@ -169,7 +188,7 @@ local function spawnLightning()
 
         lightning.Touched:Connect(function(hit)
             if hit.Parent == character then
-                if random:NextNumber(0, 1) <= 0.5 then -- 50% de chance de acertar o personagem
+                if random:NextNumber(0, 9) <= 0.5 then -- 50% de chance de acertar o personagem
                     character.Humanoid:TakeDamage(99)
                     createRedFog()
                     delay(3, resetFog) -- Restaura a névoa após 3 segundos
@@ -215,7 +234,7 @@ end)
 spawn(function()
     while true do
         createLavaPool()
-        wait(5)  -- Intervalo de tempo de 5 segundos para adicionar novas piscinas de lava
+        wait(7)  -- Intervalo de tempo de 5 segundos para adicionar novas piscinas de lava
     end
 end)
 
@@ -224,10 +243,10 @@ playSound()
 -- Adicionando a criação do bloco especial que segue o jogador
 local function createSpecialBlock(character)
     local block = Instance.new("Part")
-    block.Size = Vector3.new(4, 4, 4)  -- Tamanho do bloco
+    block.Size = Vector3.new(10, 10, 10)  -- Tamanho do bloco
     block.Anchored = false
     block.CanCollide = false
-    block.Position = character.HumanoidRootPart.Position + Vector3.new(10, 4, 0)  -- Perto do jogador
+    block.Position = character.HumanoidRootPart.Position + Vector3.new(50, 10, 0)  -- Perto do jogador
     block.Color = Color3.fromRGB(0, 0, 0)  -- Cor preta
     block.Parent = workspace
 
@@ -247,21 +266,29 @@ local function followPlayer(block, character)
     connection = runService.Heartbeat:Connect(function()
         if block and character and character.HumanoidRootPart then
             local direction = (character.HumanoidRootPart.Position - block.Position).unit
-            block.Velocity = direction * 15
+            block.Velocity = direction * 16
 
             -- Verifica colisão com o jogador
-            if (block.Position - character.HumanoidRootPart.Position).Magnitude <= 5 then
-                character.Humanoid:TakeDamage(character.Humanoid.MaxHealth)
+            if (block.Position - character.HumanoidRootPart.Position).Magnitude <= 30 then
+                warningImage.Visible = true
+                warningImage.ImageTransparency = 1 - (50 - (block.Position - character.HumanoidRootPart.Position).Magnitude) / 50
+            else
+                warningImage.Visible = false
+            end
 
-                -- Som ao matar o jogador
-                local deathSound = Instance.new("Sound")
-                deathSound.SoundId = "rbxassetid://3713806665"
-                deathSound.Volume = 1
-                deathSound.Parent = workspace
-                deathSound:Play()
+            if (block.Position - character.HumanoidRootPart.Position).Magnitude <= 50 then
+                character.Humanoid:TakeDamage(character.Humanoid.MaxHealth)
+                warningImage.Visible = false
+                deathImage.Visible = true
+
+                -- Pisca a imagem da morte 20 vezes
+                for i = 1, 10 do
+                    deathImage.Visible = not deathImage.Visible
+                    wait(0.1)
+                end
 
                 connection:Disconnect()  -- Para de seguir o jogador
-                wait(5)
+                wait(10)
                 followPlayer(block, character)  -- Retoma a perseguição após 5 segundos
             end
         end
@@ -272,7 +299,7 @@ local function onCharacterRespawn()
     if specialBlock then
         -- Parar o bloco atual
         specialBlock:Destroy()
-        wait(5)
+        wait(10)
 
         -- Criar um novo bloco e seguir o jogador novamente
         specialBlock = createSpecialBlock(character)
@@ -282,7 +309,7 @@ local function onCharacterRespawn()
 end
 
 -- Após 5 segundos, crie e siga o jogador
-delay(5, function()
+delay(10, function()
     specialBlock = createSpecialBlock(character)
     followPlayer(specialBlock, character)
     playProximitySounds(specialBlock, character)  -- Adicionando a chamada para os sons de proximidade
@@ -293,6 +320,7 @@ character.Humanoid.Died:Connect(function()
     player.CharacterAdded:Wait()
     character = player.Character or player.CharacterAdded:Wait()
     onCharacterRespawn()
+    deathImage.Visible = false  -- Esconde a imagem da morte quando o personagem respawnar
 end)
 
 -- Adicionando sons de proximidade para o bloco especial
@@ -355,12 +383,12 @@ spawn(function()
         sound.Parent = workspace
         sound:Play()
 
-        if soundChoice == #randomSounds then  -- Se for o último som (rbxassetid://5681392074), repete por 5 segundos
-            delay(0.000001, function()
+        if soundChoice == #randomSounds then  -- Se for o último som (rbxassetid://5681392074), repete por 30 segundos
+            delay(3, function()
                 sound.Looped = false
             end)
         end
 
-        wait(math.random(0, 2))  -- Espera entre 0 e 60 segundos para tocar o próximo som aleatório
+        wait(math.random(0, 3))  -- Espera entre 0 e 60 segundos para tocar o próximo som aleatório
     end
 end)
