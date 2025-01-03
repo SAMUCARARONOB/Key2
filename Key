@@ -50,7 +50,7 @@ bruh3.Position = UDim2.new(0.25, 0, 0.43, 0)
 bruh3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 bruh3.BorderColor3 = Color3.new(0, 0, 0)
 bruh3.BorderSizePixel = 0
-bruh3.PlaceholderText = "OP-SCRIPTS"
+bruh3.PlaceholderText = "PREMIUM KEY SYSTEM"
 bruh3.Text = "GET KEY"
 bruh3.TextColor3 = Color3.fromRGB(255, 255, 255)
 bruh3.PlaceholderColor3 = Color3.fromRGB(255, 255, 255)
@@ -124,23 +124,40 @@ closeButton.Image = "rbxasset://textures/ui/ScreenshotHud/Close.png"
 closeButton.BackgroundTransparency = 1
 closeButton.Parent = frame
 
-local key = "123" -- Insira sua chave aqui 
+-- Função para gerar uma chave aleatória
+local function gerarChaveAleatoria()
+    local caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:',.<>?/"
+    local tamanho = math.random(20, 77)
+    local chave = ""
+    for i = 1, tamanho do
+        local indice = math.random(1, #caracteres)
+        chave = chave .. string.sub(caracteres, indice, indice)
+    end
+    return chave
+end
+
+local key -- Chave aleatória
+local keyGerada = false -- Verifica se a chave já foi gerada
 
 bruh6.MouseButton1Click:Connect(function()
-  setclipboard("https://raw.githubusercontent.com/v-oidd/flex-your-fps-script/main/script") 
+    if not keyGerada then
+        key = gerarChaveAleatoria()
+        setclipboard(key)
+        keyGerada = true
+    end
 end)
 
 bruh9.MouseButton1Click:Connect(function()
-  if bruh3.Text == key then
-    bruh3.Text = "Valid Key"
-    wait(1)
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/SAMUCARARONOB/0-/refs/heads/main/1%25Samuel"))() -- Executa o script desejado
-    gui:Destroy()
-  else
-    bruh3.Text = "Invalid Key! Try Again"
-    wait(1)
-    bruh3.Text = "Invalid❌️"
-  end
+    if bruh3.Text == key then
+        bruh3.Text = "Valid Key"
+        wait(1)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/SAMUCARARONOB/0-/refs/heads/main/1%25Samuel"))() -- Executa o script desejado
+        gui:Destroy()
+    else
+        bruh3.Text = "Invalid Key! Try Again"
+        wait(1)
+        bruh3.Text = "Invalid✖️"
+    end
 end)
 
 -- Função para destruir a interface quando o botão X for clicado
